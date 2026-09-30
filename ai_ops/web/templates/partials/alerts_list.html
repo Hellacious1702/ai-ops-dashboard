@@ -1,0 +1,43 @@
+<div class="space-y-3">
+    {% for alert in alerts %}
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-red-300 dark:hover:border-red-700 transition-colors {% if alert.severity == 'critical' %}border-l-4 border-l-red-500{% elif alert.severity == 'warning' %}border-l-4 border-l-yellow-500{% else %}border-l-4 border-l-blue-500{% endif %}">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center {% if alert.severity == 'critical' %}bg-red-100 dark:bg-red-900/30{% elif alert.severity == 'warning' %}bg-yellow-100 dark:bg-yellow-900/30{% else %}bg-blue-100 dark:bg-blue-900/30{% endif %}">
+                <svg class="w-5 h-5 {% if alert.severity == 'critical' %}text-red-600{% elif alert.severity == 'warning' %}text-yellow-600{% else %}text-blue-600{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    <h4 class="font-medium text-gray-900 dark:text-white truncate">{{ alert.title }}</h4>
+                    <span class="badge {% if alert.severity == 'critical' %}badge-critical{% elif alert.severity == 'warning' %}badge-high{% else %}badge-low{% endif %}">{{ alert.severity }}</span>
+                    <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ alert.type }}</span>
+                </div>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">{{ alert.message }}</p>
+                <div class="flex items-center gap-4 text-sm">
+                    <span class="font-mono text-gray-700 dark:text-gray-300">Value: {{ "%.2f"|format(alert.value) }}</span>
+                    <span class="font-mono text-gray-700 dark:text-gray-300">Threshold: {{ "%.2f"|format(alert.threshold) }}</span>
+                    {% if alert.provider %}
+                    <span class="text-gray-500 dark:text-gray-400 font-mono">{{ alert.provider }} / {{ alert.model }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex items-center gap-1">
+                {% if not alert.acknowledged %}
+                <button hx-post="/api/alerts/{{ alert.id }}/action" hx-vals='{"action": "acknowledge"}' hx-target="closest div" hx-swap="outerHTML" class="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded transition-colors">Acknowledge</button>
+                {% endif %}
+                {% if not alert.resolved %}
+                <button hx-post="/api/alerts/{{ alert.id }}/action" hx-vals='{"action": "resolve"}' hx-target="closest div" hx-swap="outerHTML" class="px-3 py-1.5 text-xs font-medium text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 rounded transition-colors">Resolve</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+        <svg class="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <p>No active alerts</p>
+    </div>
+    {% endfor %}
+</div>

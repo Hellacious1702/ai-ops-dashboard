@@ -1,0 +1,32 @@
+<div class="overflow-x-auto scrollbar-thin">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                <th class="pb-2 px-3 font-medium">Provider</th>
+                <th class="pb-2 px-3 font-medium">Model</th>
+                <th class="pb-2 px-3 font-medium text-right">Calls</th>
+                <th class="pb-2 px-3 font-medium text-right">Tokens</th>
+                <th class="pb-2 px-3 font-medium text-right">Cost</th>
+                <th class="pb-2 px-3 font-medium text-right">Avg Latency</th>
+                <th class="pb-2 px-3 font-medium text-right">Errors</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            {% for item in breakdown %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <td class="py-3 px-3 font-medium text-gray-900 dark:text-white">{{ item.provider }}</td>
+                <td class="py-3 px-3 font-mono text-gray-700 dark:text-gray-300">{{ item.model }}</td>
+                <td class="py-3 px-3 text-right font-mono text-gray-900 dark:text-white">{{ item.calls }}</td>
+                <td class="py-3 px-3 text-right font-mono text-gray-700 dark:text-gray-300">{{ item.tokens | int | format_number }}</td>
+                <td class="py-3 px-3 text-right font-mono font-semibold text-gray-900 dark:text-white">${{ "%.4f"|format(item.cost_usd) }}</td>
+                <td class="py-3 px-3 text-right font-mono text-gray-700 dark:text-gray-300">{{ "%.0f"|format(item.avg_latency_ms) }}ms</td>
+                <td class="py-3 px-3 text-right font-mono {% if item.errors > 0 %}text-red-600{% else %}text-gray-700 dark:text-gray-300{% endif %}">{{ item.errors }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="7" class="py-8 text-center text-gray-500 dark:text-gray-400">No data available</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

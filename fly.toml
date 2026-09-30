@@ -1,0 +1,57 @@
+# Fly.io Configuration for AI Ops Dashboard
+# Deploy with: fly launch --config fly.toml && fly deploy
+
+app = "ai-ops-dashboard"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DB_SQLITE_PATH = "/data/ai_ops.db"
+  DB_PARQUET_EXPORT_PATH = "/data/parquet"
+  INSTR_ENABLED = "true"
+  METRICS_ENABLED = "true"
+  REC_ENABLED = "true"
+  ALERT_ENABLED = "true"
+  WEB_HOST = "0.0.0.0"
+  WEB_PORT = "8080"
+  LOG_LEVEL = "INFO"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[mounts]
+  source = "ai_ops_data"
+  destination = "/data"
+
+[[services]]
+  http_checks = []
+  internal_port = 8080
+  processes = ["app"]
+  protocol = "tcp"
+  script_checks = []
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [[services.tcp_checks]]
+    grace_period = "1s"
+    interval = "15s"
+    restart_limit = 0
+    timeout = "2s"

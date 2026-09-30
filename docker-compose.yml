@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  # Main API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_SQLITE_PATH=/app/data/ai_ops.db
+      - DB_PARQUET_EXPORT_PATH=/app/data/parquet
+      - INSTR_ENABLED=true
+      - METRICS_ENABLED=true
+      - REC_ENABLED=true
+      - ALERT_ENABLED=true
+      - WEB_HOST=0.0.0.0
+      - WEB_PORT=8000
+      - LOG_LEVEL=INFO
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # TUI service (for development)
+  tui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: python -m ai_ops.cli tui
+    environment:
+      - DB_SQLITE_PATH=/app/data/ai_ops.db
+      - INSTR_ENABLED=true
+      - METRICS_ENABLED=true
+      - REC_ENABLED=true
+      - ALERT_ENABLED=true
+    volumes:
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+
+  # Database export job (runs periodically)
+  parquet-export:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    command: python -m ai_ops.cli export_parquet
+    environment:
+      - DB_SQLITE_PATH=/app/data/ai_ops.db
+      - DB_PARQUET_EXPORT_PATH=/app/data/parquet
+    volumes:
+      - ./data:/app/data
+    profiles:
+      - export
+
+  # Development service with hot reload
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_SQLITE_PATH=/app/data/ai_ops.db
+      - DB_PARQUET_EXPORT_PATH=/app/data/parquet
+      - INSTR_ENABLED=true
+      - METRICS_ENABLED=true
+      - REC_ENABLED=true
+      - ALERT_ENABLED=true
+      - WEB_HOST=0.0.0.0
+      - WEB_PORT=8000
+      - WEB_RELOAD=true
+      - LOG_LEVEL=DEBUG
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./.env:/app/.env:ro
+    command: python -m ai_ops.web.api
+    profiles:
+      - dev
+
+volumes:
+  data:
+    driver: local
